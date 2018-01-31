@@ -2,6 +2,8 @@
 #include "encoding.h"
 #include "pqueue.h"
 
+
+// count frequencies: Examine a source file's contents and count the number of occurrences of each character.
 Map<int, int> buildFrequencyTable(istream& input) {
 
     Map<int, int> freqTable;
@@ -19,6 +21,8 @@ Map<int, int> buildFrequencyTable(istream& input) {
     return freqTable;
 }
 
+// build encoding tree: Build a binary tree with a particular structure, where each node represents a character and 
+// its count of occurrences in the file. A priority queue is used to help build the tree along the way.
 
 HuffmanNode* buildEncodingTree(const Map<int, int>& freqTable) {
 
@@ -61,6 +65,8 @@ void buildEncodingMapHelper(HuffmanNode* root, Map<int, string>& map, string tra
 
 }
 
+// build encoding map: Traverse the binary tree to discover the binary encodings of each character
+
 Map<int, string> buildEncodingMap(HuffmanNode* encodingTree) {
 
     Map<int, string> encodingMap;
@@ -70,6 +76,8 @@ Map<int, string> buildEncodingMap(HuffmanNode* encodingTree) {
 }
 
 
+// encode data: Re-examine the source file's contents, and for each character, output the encoded binary version 
+// of that character to the destination file.
 
 void encodeData(istream& input, const Map<int, string>& encodingMap, obitstream& output) {
 
