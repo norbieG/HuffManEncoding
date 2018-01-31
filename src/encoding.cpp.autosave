@@ -1,0 +1,160 @@
+#include "filelib.h"
+#include "encoding.h"
+#include "pqueue.h"
+
+Map<int, int> buildFrequencyTable(istream& input) {
+
+    Map<int, int> freqTable;
+    int ch = input.get();
+
+    while (ch!=-1) {
+
+        freqTable[ch]++;
+        ch = input.get();
+    }
+
+    freqTable[PSEUDO_EOF] =1;
+    rewindStream(input);
+
+    return freqTable;
+}
+
+
+HuffmanNode* buildEncodingTree(const Map<int, int>& freqTable) {
+
+    PriorityQueue<HuffmanNode*> pq;
+
+    for (int ch : freqTable) {
+        HuffmanNode* node = new HuffmanNode(ch, freqTable[ch]);  //create object that will not die at the end of the function
+        pq.enqueue(node,freqTable[ch]);
+
+    }
+
+    while (pq.size() > 1) {
+
+        HuffmanNode* left = pq.dequeue();
+        HuffmanNode* right = pq.dequeue();
+
+        int priority = left->count + right->count;
+        HuffmanNode* joined = new HuffmanNode(NOT_A_CHAR,priority,left,right);
+
+        pq.enqueue(joined, priority);
+
+    }
+
+    return pq.dequeue();
+}
+
+void buildEncodingMapHelper(HuffmanNode* root, Map<int, string>& map, string track) {
+
+    if (root->isLeaf()) {
+        map[root->character] = track;
+
+
+
+    } else {
+
+        buildEncodingMapHelper(root->zero, map,track+="0");
+        track.erase(track.size()-1,1);
+        buildEncodingMapHelper(root->one, map,track+="1");
+    }
+
+}
+
+Map<int, string> buildEncodingMap(HuffmanNode* encodingTree) {
+
+    Map<int, string> encodingMap;
+    buildEncodingMapHelper(encodingTree, encodingMap,"");
+
+    return encodingMap;
+}
+
+
+
+void encodeData(istream& input, const Map<int, string>& encodingMap, obitstream& output) {
+
+    int ch = input.get();
+
+    while (ch!=-1) {
+
+        for (char digit : encodingMap[ch]) {
+
+            output.writeBit(int(digit)-48);
+        }
+
+        ch = input.get();
+    }
+
+    for (char digit : encodingMap[PSEUDO_EOF]) {
+
+        output.writeBit(int(digit)-48);
+
+    }
+    rewindStream(input);
+
+}
+
+ void decodeData(ibitstream& input, HuffmanNode* encodingTree, ostream& output) {
+
+    HuffmanNode* currentNode = encodingTree;
+    HuffmanNode* nextNode = currentNode;
+
+    int bit = input.readBit();
+
+    while (bit != -1) {
+
+        if (bit == 0) {
+            nextNode = currentNode->zero;
+
+        } else if (bit == 1) {
+            nextNode = currentNode->one;
+        }
+
+        if (nextNode->isLeaf()) {
+
+            if (nextNode->character == PSEUDO_EOF) {
+                break;
+
+            } else {
+                output.put(char(nextNode->character));
+                currentNode = encodingTree; // go up to the root
+            }
+
+        } else {
+            currentNode = nextNode; // point where NextNode is
+        }
+
+        bit = input.readBit();
+    }
+}
+
+
+void compress(istream& input, obitstream& output) {
+
+    Map<int, int> freqTable = buildFrequencyTable(input);
+    output << freqTable;
+    HuffmanNode* tree = buildEncodingTree(freqTable);
+    Map<int, string>encodingMap = buildEncodingMap(tree);
+    encodeData(input,encodingMap, output);
+    freeTree(tree);
+}
+
+void decompress(ibitstream& input, ostream& output) {
+
+    Map<int, int> freqMap;
+    input >> freqMap;
+    HuffmanNode* tree = buildEncodingTree(freqMap);
+    decodeData(input,tree, output);
+    freeTree(tree);
+}
+
+void freeTree(HuffmanNode* node) {
+
+    if (node == NULL) {
+
+    } else {
+        freeTree(node->zero);
+        freeTree(node->one);
+        delete node;
+    }
+}
