@@ -1,1 +1,1 @@
-A file compression algorithm that uses binary trees and priority queues. 
+My implementation of file compression algorithm using binary trees and priority queues. 
