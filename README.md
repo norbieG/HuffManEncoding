@@ -1,1 +1,1 @@
-My implementation of file compression algorithm using binary trees and priority queues. 
+It is my solution to CS106B project "Huffman Encoding" where I use binary trees and priority queues. 
